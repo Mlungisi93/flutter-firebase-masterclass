@@ -12,6 +12,9 @@
       "args": [
         "--target",
         "lib/main.dart"
+      ],
+      "additionalProjectPaths": [
+        "/Users/mlungisi/.pub-cache/hosted/pub.dev"
       ]
     },
     {
@@ -22,7 +25,20 @@
       "args": [
         "--target",
         "lib/main_fakes.dart"
-      ]
+      ],
+      "remoteRoot": "${workspaceFolder}",
     },
+    {
+      "name": "Launch macOS with Provisioning Updates",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "--target",
+        "lib/main.dart",
+        "--",
+        "-allowProvisioningUpdates"
+      ]
+    }
   ]
 }

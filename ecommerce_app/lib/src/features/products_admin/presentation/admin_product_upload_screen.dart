@@ -8,7 +8,9 @@ import 'package:ecommerce_app/src/constants/app_sizes.dart';
 import 'package:ecommerce_app/src/constants/breakpoints.dart';
 import 'package:ecommerce_app/src/features/products/domain/product.dart';
 import 'package:ecommerce_app/src/features/products_admin/data/template_products_providers.dart';
+import 'package:ecommerce_app/src/features/products_admin/presentation/admin_product_upload_controller.dart';
 import 'package:ecommerce_app/src/localization/string_hardcoded.dart';
+import 'package:ecommerce_app/src/utils/async_value_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -37,15 +39,13 @@ class AdminProductUpload extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // TODO: Uncomment
-    // ref.listen<AsyncValue>(
-    //   adminProductUploadControllerProvider,
-    //   (_, state) => state.showAlertDialogOnError(context),
-    // );
-    // // State of the upload operation
-    // final state = ref.watch(adminProductUploadControllerProvider);
-    // final isLoading = state.isLoading;
-    const isLoading = false;
+    ref.listen<AsyncValue>(
+      adminProductUploadControllerProvider,
+      (_, state) => state.showAlertDialogOnError(context),
+    );
+    // State of the upload operation
+    final state = ref.watch(adminProductUploadControllerProvider);
+    final isLoading = state.isLoading;
     // Product to be uploaded
     final templateProductValue = ref.watch(templateProductProvider(productId));
     return AsyncValueWidget<Product?>(
@@ -63,16 +63,13 @@ class AdminProductUpload extends ConsumerWidget {
                 PrimaryButton(
                   text: 'Upload'.hardcoded,
                   isLoading: isLoading,
-                  onPressed: () => showAlertDialog(
-                    context: context,
-                    title: 'Not implemented'.hardcoded,
-                  ),
+
                   // TODO: Uncomment
-                  // onPressed: isLoading
-                  //     ? null
-                  //     : () => ref
-                  //         .read(adminProductUploadControllerProvider.notifier)
-                  //         .upload(templateProduct),
+                  onPressed: isLoading
+                      ? null
+                      : () => ref
+                          .read(adminProductUploadControllerProvider.notifier)
+                          .upload(templateProduct),
                 ),
               ] else
                 ErrorMessageWidget(

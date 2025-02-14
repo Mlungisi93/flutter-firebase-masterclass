@@ -16,6 +16,7 @@ class AdminProductUploadController extends _$AdminProductUploadController
     // no-op
   }
 
+//But if you need to make two or more asynchronous calls that may use different repositories, consider doing so inside a separate service class that is completely independent from the UI (this can be more easily tested and can improve code reuse too):
   Future<void> upload(Product product) async {
     try {
       state = const AsyncLoading();

@@ -69,6 +69,15 @@ class ProductsRepository {
             product.title.toLowerCase().contains(query.toLowerCase()))
         .toList();
   }
+
+  Future<void> updateProduct(Product product) {
+    final ref = _productRef(product.id);
+    return ref.set(product);
+  }
+
+  Future<void> deleteProduct(ProductID id) {
+    return _firestore.doc(productPath(id)).delete();
+  }
 }
 
 @Riverpod(keepAlive: true)

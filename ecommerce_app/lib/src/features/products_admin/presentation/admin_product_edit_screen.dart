@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:math';
+
 import 'package:ecommerce_app/src/common_widgets/action_text_button.dart';
 import 'package:ecommerce_app/src/common_widgets/alert_dialogs.dart';
 import 'package:ecommerce_app/src/common_widgets/custom_image.dart';
@@ -13,8 +16,28 @@ import 'package:ecommerce_app/src/features/products_admin/presentation/admin_pro
 import 'package:ecommerce_app/src/features/products_admin/presentation/product_validator.dart';
 import 'package:ecommerce_app/src/localization/string_hardcoded.dart';
 import 'package:ecommerce_app/src/utils/async_value_ui.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+
+Future<List<XFile>> pickImages() async {
+  if (kIsWeb || Platform.isMacOS) {
+    // Handle image picking for web and macOS
+    final result = await ImagePicker().pickMultiImage();
+    return result.map((file) => XFile(file.path)).toList();
+    return [];
+  } else {
+    // Handle image picking for mobile
+    final pickedFiles = await ImagePicker().pickMultiImage(
+      imageQuality: 80,
+      maxWidth: 1920,
+      maxHeight: 1080,
+    );
+    return pickedFiles ?? [];
+  }
+}
 
 /// Widget screen for updating existing products (edit mode).
 /// Products are first created inside [AdminProductUploadScreen].
@@ -69,6 +92,11 @@ class _AdminProductScreenContentsState
 
   Product get product => widget.product;
 
+  List<String> _existingImages = [];
+  List<XFile> _newImages = [];
+  int _currentExistingImageIndex = 0;
+  int _currentNewImageIndex = 0;
+
   @override
   void initState() {
     super.initState();
@@ -77,6 +105,7 @@ class _AdminProductScreenContentsState
     _descriptionController.text = product.description;
     _priceController.text = product.price.toString();
     _availableQuantityController.text = product.availableQuantity.toString();
+    _existingImages = List.from(product.imageUrls);
   }
 
   @override
@@ -113,9 +142,17 @@ class _AdminProductScreenContentsState
     }
   }
 
+  Future<void> _pickImages() async {
+    final pickedFiles = await pickImages();
+    setState(() {
+      _newImages = pickedFiles;
+    });
+  }
+
   Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
       final scaffoldMessenger = ScaffoldMessenger.of(context);
+      final images = _newImages.map((xfile) => File(xfile.path)).toList();
       final success = await ref
           .read(adminProductEditControllerProvider.notifier)
           .updateProduct(
@@ -124,7 +161,9 @@ class _AdminProductScreenContentsState
             description: _descriptionController.text,
             price: _priceController.text,
             availableQuantity: _availableQuantityController.text,
+            images: images,
           );
+
       if (success) {
         // Inform the user that the product has been updated
         scaffoldMessenger.showSnackBar(
@@ -136,6 +175,71 @@ class _AdminProductScreenContentsState
         );
       }
     }
+  }
+
+  _removeExistingImage(String imageUrl) async {
+    var delete = await showAlertDialog(
+      context: context,
+      title: 'Are you sure?'.hardcoded,
+      content: 'Delete this image?'.hardcoded,
+      cancelActionText: 'Cancel'.hardcoded,
+      defaultActionText: 'Delete'.hardcoded,
+    );
+
+    if (delete == true) {
+      var isSuccessful = false;
+      isSuccessful = await ref
+          .read(adminProductEditControllerProvider.notifier)
+          .deleteProductImage(product, imageUrl);
+
+      if (isSuccessful) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Image deleted'.hardcoded),
+          ),
+        );
+
+        setState(() {
+          _existingImages.remove(imageUrl);
+          _currentExistingImageIndex = max(0, _currentExistingImageIndex - 1);
+        });
+      }
+    }
+  }
+
+  void removeNewImage(XFile image) {
+    setState(() {
+      _newImages.remove(image);
+      _currentNewImageIndex = max(0, _currentNewImageIndex - 1);
+    });
+  }
+
+  void _nextExistingImage() {
+    setState(() {
+      _currentExistingImageIndex =
+          (_currentExistingImageIndex + 1) % _existingImages.length;
+    });
+  }
+
+  void _previousExistingImage() {
+    setState(() {
+      _currentExistingImageIndex =
+          (_currentExistingImageIndex - 1 + _existingImages.length) %
+              _existingImages.length;
+    });
+  }
+
+  void _nextNewImage() {
+    setState(() {
+      _currentNewImageIndex = (_currentNewImageIndex + 1) % _newImages.length;
+    });
+  }
+
+  void _previousNewImage() {
+    setState(() {
+      _currentNewImageIndex =
+          (_currentNewImageIndex - 1 + _newImages.length) % _newImages.length;
+    });
   }
 
   @override
@@ -166,7 +270,97 @@ class _AdminProductScreenContentsState
               startContent: Card(
                 child: Padding(
                   padding: const EdgeInsets.all(Sizes.p16),
-                  child: CustomImage(imageUrl: product.imageUrl),
+                  child: Column(
+                    children: [
+                      if (_existingImages.isNotEmpty) ...[
+                        Text('Existing Images'.hardcoded),
+                        SizedBox(
+                          height: 200,
+                          child: Stack(
+                            children: [
+                              CustomImage(
+                                  imageUrl: _existingImages[
+                                      _currentExistingImageIndex]),
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: IconButton(
+                                  icon: isLoading
+                                      ? CircularProgressIndicator()
+                                      : Icon(Icons.delete),
+                                  onPressed: isLoading
+                                      ? null
+                                      : () => _removeExistingImage(
+                                          _existingImages[
+                                              _currentExistingImageIndex]),
+                                ),
+                              ),
+                              Positioned(
+                                bottom: 0,
+                                left: 0,
+                                child: IconButton(
+                                  icon: Icon(Icons.arrow_back),
+                                  onPressed: _previousExistingImage,
+                                ),
+                              ),
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: IconButton(
+                                  icon: Icon(Icons.arrow_forward),
+                                  onPressed: _nextExistingImage,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      if (_newImages.isNotEmpty) ...[
+                        Text('New Images'.hardcoded),
+                        SizedBox(
+                          height: 200,
+                          child: Stack(
+                            children: [
+                              kIsWeb
+                                  ? Image.network(
+                                      _newImages[_currentNewImageIndex].path)
+                                  : Image.file(File(
+                                      _newImages[_currentNewImageIndex].path)),
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: IconButton(
+                                  icon: Icon(Icons.delete),
+                                  onPressed: () => removeNewImage(
+                                      _newImages[_currentNewImageIndex]),
+                                ),
+                              ),
+                              Positioned(
+                                bottom: 0,
+                                left: 0,
+                                child: IconButton(
+                                  icon: Icon(Icons.arrow_back),
+                                  onPressed: _previousNewImage,
+                                ),
+                              ),
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: IconButton(
+                                  icon: Icon(Icons.arrow_forward),
+                                  onPressed: _nextNewImage,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      ElevatedButton(
+                        onPressed: _pickImages,
+                        child: Text('Pick Images'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               spacing: Sizes.p16,

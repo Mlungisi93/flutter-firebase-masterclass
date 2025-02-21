@@ -41,7 +41,7 @@ class ProductsRepository {
     return _firestore.doc(productPath(id)).set(
       {
         'id': id,
-        'imageUrl': imageUrl,
+        'imageUrls': [imageUrl],
       },
       // use merge: true to keep old fields (if any)
       SetOptions(merge: true),

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:ecommerce_app/src/features/products/data/products_repository.dart';
 import 'package:ecommerce_app/src/features/products/domain/product.dart';
 import 'package:ecommerce_app/src/features/products_admin/data/image_upload_repository.dart';
@@ -14,7 +16,7 @@ class ImageUploadService {
     // upload to storage and return download URL
     final downloadUrl = await ref
         .read(imageUploadRepositoryProvider)
-        .uploadProductImageFromAsset(product.imageUrl, product.id);
+        .uploadProductImageFromAsset(product.imageUrls[0], product.id);
 
     // write to Cloud Firestore
     await ref
@@ -23,13 +25,23 @@ class ImageUploadService {
   }
 
   Future<void> deleteProduct(Product product) async {
-    // delete image from storage
-    await ref
-        .read(imageUploadRepositoryProvider)
-        .deleteProductImage(product.imageUrl);
+    // delete images from storage and folder
+    await ref.read(imageUploadRepositoryProvider).deleteProductImages(product);
 
     // delete product from Firestore
     await ref.read(productsRepositoryProvider).deleteProduct(product.id);
+  }
+
+  //delete image from storage and folder
+  Future<void> deleteProductImage(Product product, String image) async {
+    // delete image from storage
+    await ref.read(imageUploadRepositoryProvider).deleteProductImage(image);
+
+    // delete image from Firestore
+    var updatedProduct = product.copyWith(
+      imageUrls: product.imageUrls..remove(image),
+    );
+    await ref.read(productsRepositoryProvider).updateProduct(updatedProduct);
   }
 }
 

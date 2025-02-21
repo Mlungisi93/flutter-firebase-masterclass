@@ -57,7 +57,7 @@ class AdminProductUpload extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (templateProduct != null) ...[
-                CustomImage(imageUrl: templateProduct.imageUrl),
+                CustomImage(imageUrl: templateProduct.imageUrls[0]),
                 gapH16,
                 PrimaryButton(
                   text: 'Upload'.hardcoded,

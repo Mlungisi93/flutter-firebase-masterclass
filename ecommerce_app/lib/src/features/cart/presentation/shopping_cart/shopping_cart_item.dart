@@ -78,7 +78,7 @@ class ShoppingCartItemContents extends ConsumerWidget {
       startFlex: 1,
       endFlex: 2,
       breakpoint: 320,
-      startContent: CustomImage(imageUrl: product.imageUrl),
+      startContent: CustomImage(imageUrl: product.imageUrls[0]),
       spacing: Sizes.p24,
       endContent: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

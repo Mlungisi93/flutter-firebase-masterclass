@@ -24,7 +24,7 @@ class OrderItemListTile extends ConsumerWidget {
           children: [
             Flexible(
               flex: 1,
-              child: CustomImage(imageUrl: product!.imageUrl),
+              child: CustomImage(imageUrl: product!.imageUrls[0]),
             ),
             gapW8,
             Flexible(

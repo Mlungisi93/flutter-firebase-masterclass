@@ -7,7 +7,7 @@ typedef ProductID = String;
 class Product extends Equatable {
   const Product({
     required this.id,
-    required this.imageUrl,
+    required this.imageUrls,
     required this.title,
     required this.description,
     required this.price,
@@ -18,7 +18,7 @@ class Product extends Equatable {
 
   /// Unique product id
   final ProductID id;
-  final String imageUrl;
+  final List<String> imageUrls;
   final String title;
   final String description;
   final double price;
@@ -29,7 +29,7 @@ class Product extends Equatable {
   factory Product.fromMap(Map<String, dynamic> map) {
     return Product(
       id: map['id'] as String,
-      imageUrl: map['imageUrl'] as String,
+      imageUrls: List<String>.from(map['imageUrls'] as List),
       title: map['title'] ?? '',
       description: map['description'] ?? '',
       price: map['price']?.toDouble() ?? 0.0,
@@ -41,7 +41,7 @@ class Product extends Equatable {
 
   Map<String, dynamic> toMap() => {
         'id': id,
-        'imageUrl': imageUrl,
+        'imageUrls': imageUrls,
         'title': title,
         'description': description,
         'price': price,
@@ -52,7 +52,7 @@ class Product extends Equatable {
 
   Product copyWith({
     ProductID? id,
-    String? imageUrl,
+    List<String>? imageUrls,
     String? title,
     String? description,
     double? price,
@@ -62,7 +62,7 @@ class Product extends Equatable {
   }) {
     return Product(
       id: id ?? this.id,
-      imageUrl: imageUrl ?? this.imageUrl,
+      imageUrls: imageUrls ?? this.imageUrls,
       title: title ?? this.title,
       description: description ?? this.description,
       price: price ?? this.price,
@@ -75,7 +75,7 @@ class Product extends Equatable {
   @override
   List<Object?> get props => [
         id,
-        imageUrl,
+        imageUrls,
         title,
         description,
         price,

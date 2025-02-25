@@ -95,12 +95,17 @@ int cartItemsCount(Ref ref) {
 @riverpod
 Future<double> cartTotal(Ref ref) async {
   final cart = await ref.watch(cartProvider.future);
-  final productsList = await ref.watch(productsListStreamProvider.future);
-  if (cart.items.isNotEmpty && productsList.isNotEmpty) {
+  // final productsList = await ref.watch(productsListStreamProvider.future);
+  if (cart.items.isNotEmpty) {
     var total = 0.0;
     for (final item in cart.items.entries) {
-      final product =
-          productsList.firstWhereOrNull((product) => product.id == item.key);
+      //optimising the code as we are reading the entire products list when we only need the product with the
+      //the cart only using the product id
+      // final product =
+      //     productsList.firstWhereOrNull((product) => product.id == item.key);
+
+      final product = await ref.watch(productStreamProvider(item.key).future);
+
       if (product != null) {
         total += product.price * item.value;
       }

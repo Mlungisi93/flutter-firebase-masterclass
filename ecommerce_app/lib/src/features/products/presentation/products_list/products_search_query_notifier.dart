@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:ecommerce_app/src/features/products/data/products_search_repository.dart';
 import 'package:ecommerce_app/src/features/products/domain/product.dart';
+import 'package:flutter/foundation.dart';
 import 'package:riverpod/riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';
@@ -33,14 +34,14 @@ class ProductsSearchQueryNotifier extends _$ProductsSearchQueryNotifier {
 
   void _updateState(String query) {
     // only update the state once the query has been debounced
-    log('state = $query');
+    debugPrint('state = $query');
     state = query;
   }
 
   void setQuery(String query) {
     // rather than setting the state directly, add the query to the sink so it
     // can be debounced
-    log('query = $query');
+    debugPrint('query = $query');
     _searchQueryController.sink.add(query);
   }
 }
